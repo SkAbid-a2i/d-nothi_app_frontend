@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
 function Sidebar() {
   const { user } = useAuth();
@@ -17,6 +17,9 @@ function Sidebar() {
         <li>
           <Link to="/leaves" className="block p-2 hover:bg-gray-700 rounded">Leaves</Link>
         </li>
+        <li>
+          <Link to="/leaves/calendar" className="block p-2 hover:bg-gray-700 rounded">Leave Calendar</Link>
+        </li>
         {['SystemAdmin', 'Admin', 'Supervisor'].includes(user?.role) && (
           <li>
             <Link to="/tasks/create" className="block p-2 hover:bg-gray-700 rounded">Create Task</Link>
@@ -25,6 +28,11 @@ function Sidebar() {
         {['Agent'].includes(user?.role) && (
           <li>
             <Link to="/leaves/create" className="block p-2 hover:bg-gray-700 rounded">Request Leave</Link>
+          </li>
+        )}
+        {user?.role === 'SystemAdmin' && (
+          <li>
+            <Link to="/users/create" className="block p-2 hover:bg-gray-700 rounded">Create User</Link>
           </li>
         )}
       </ul>
