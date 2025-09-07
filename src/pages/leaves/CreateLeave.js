@@ -1,28 +1,29 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createLeave } from '../../services/api';
+import { useAuth } from '../hooks/useAuth';
+import { createLeave } from '../services/api';
 
 function CreateLeave() {
-  const [formData, setFormData] = useState({
-    start_date: '',
-    end_date: '',
-    reason: ''
-  });
+  const { user } = useAuth();
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [reason, setReason] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  if (!user || !['Agent'].includes(user.role)) {
+    navigate('/dashboard');
+    return null;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createLeave(formData);
-      navigate('/dashboard');
+      await createLeave({ start_date: startDate, end_date: endDate, reason });
+      navigate('/leaves');
     } catch (error) {
-      setError(error.message || 'Error creating leave request');
+      setError(error.response?.data?.message || 'Error creating leave');
     }
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
@@ -35,9 +36,8 @@ function CreateLeave() {
             <label className="block text-sm font-medium text-gray-700">Start Date</label>
             <input
               type="date"
-              name="start_date"
-              value={formData.start_date}
-              onChange={handleChange}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
               required
             />
@@ -46,9 +46,8 @@ function CreateLeave() {
             <label className="block text-sm font-medium text-gray-700">End Date</label>
             <input
               type="date"
-              name="end_date"
-              value={formData.end_date}
-              onChange={handleChange}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
               required
             />
@@ -56,9 +55,8 @@ function CreateLeave() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Reason</label>
             <textarea
-              name="reason"
-              value={formData.reason}
-              onChange={handleChange}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
               required
             />
@@ -67,7 +65,7 @@ function CreateLeave() {
             onClick={handleSubmit}
             className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
           >
-            Submit Leave Request
+            Request Leave
           </button>
         </div>
       </div>

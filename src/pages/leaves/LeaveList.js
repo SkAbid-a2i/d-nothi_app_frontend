@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { getLeaves, updateLeaveStatus } from '../../services/api';
+import { useAuth } from '../hooks/useAuth';
+import { getLeaves, updateLeaveStatus } from '../services/api';
 
 function LeaveList() {
   const { user } = useAuth();
@@ -13,44 +13,42 @@ function LeaveList() {
         const leavesData = await getLeaves();
         setLeaves(leavesData);
       } catch (error) {
-        setError(error.message || 'Error fetching leaves');
+        setError(error.response?.data?.message || 'Error fetching leaves');
       }
     };
     fetchLeaves();
   }, []);
 
-  const handleStatusUpdate = async (leaveId, status) => {
+  const handleStatusChange = async (leaveId, status) => {
     try {
       await updateLeaveStatus(leaveId, status);
       setLeaves(leaves.map(leave => leave.id === leaveId ? { ...leave, status } : leave));
     } catch (error) {
-      setError(error.message || 'Error updating leave status');
+      setError(error.response?.data?.message || 'Error updating leave status');
     }
   };
 
   return (
     <div className="container mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-6">Leave List</h2>
+      <h2 className="text-2xl font-bold mb-6">Leaves</h2>
       {error && <p className="text-red-500 mb-4">{error}</p>}
-      <ul className="space-y-4">
+      <ul className="space-y-2">
         {leaves.map(leave => (
-          <li key={leave.id} className="p-4 bg-white rounded shadow flex justify-between items-center">
+          <li key={leave.id} className="p-4 bg-white rounded shadow flex justify-between">
             <div>
-              <p className="text-gray-600">From: {leave.start_date} To: {leave.end_date}</p>
-              <p className="text-gray-600">Reason: {leave.reason}</p>
-              <p className="text-sm text-gray-500">Status: {leave.status}</p>
+              {leave.reason} - {leave.start_date} to {leave.end_date} - {leave.status}
             </div>
             {['SystemAdmin', 'Admin', 'Supervisor'].includes(user?.role) && (
-              <div className="space-x-2">
+              <div>
                 <button
-                  onClick={() => handleStatusUpdate(leave.id, 'Approved')}
-                  className="py-1 px-3 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  onClick={() => handleStatusChange(leave.id, 'Approved')}
+                  className="text-green-500 hover:text-green-700 mr-2"
                 >
                   Approve
                 </button>
                 <button
-                  onClick={() => handleStatusUpdate(leave.id, 'Rejected')}
-                  className="py-1 px-3 bg-red-600 text-white rounded-md hover:bg-red-700"
+                  onClick={() => handleStatusChange(leave.id, 'Rejected')}
+                  className="text-red-500 hover:text-red-700"
                 >
                   Reject
                 </button>

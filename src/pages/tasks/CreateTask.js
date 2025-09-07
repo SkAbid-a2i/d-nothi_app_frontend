@@ -1,31 +1,30 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createTask } from '../../services/api';
+import { useAuth } from '../hooks/useAuth';
+import { createTask } from '../services/api';
 
 function CreateTask() {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    status: 'Pending',
-    priority: 'Medium',
-    due_date: '',
-    assigned_user_id: ''
-  });
+  const { user } = useAuth();
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [assignedUserId, setAssignedUserId] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  if (!user || !['SystemAdmin', 'Admin', 'Supervisor'].includes(user.role)) {
+    navigate('/dashboard');
+    return null;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createTask(formData);
-      navigate('/dashboard');
+      await createTask({ title, description, due_date: dueDate, assigned_user_id: assignedUserId });
+      navigate('/tasks');
     } catch (error) {
-      setError(error.message || 'Error creating task');
+      setError(error.response?.data?.message || 'Error creating task');
     }
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
@@ -38,9 +37,8 @@ function CreateTask() {
             <label className="block text-sm font-medium text-gray-700">Title</label>
             <input
               type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
               required
             />
@@ -48,57 +46,29 @@ function CreateTask() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Description</label>
             <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Status</label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value="Pending">Pending</option>
-              <option value="InProgress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Priority</label>
-            <select
-              name="priority"
-              value={formData.priority}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Due Date</label>
             <input
               type="date"
-              name="due_date"
-              value={formData.due_date}
-              onChange={handleChange}
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Assigned User ID</label>
             <input
               type="number"
-              name="assigned_user_id"
-              value={formData.assigned_user_id}
-              onChange={handleChange}
+              value={assignedUserId}
+              onChange={(e) => setAssignedUserId(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
             />
           </div>
           <button

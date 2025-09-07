@@ -16,7 +16,7 @@ function Dashboard() {
         setTasks(tasksData);
         setLeaves(leavesData);
       } catch (error) {
-        setError(error.message || 'Error fetching data');
+        setError(error.response?.data?.message || 'Error fetching data');
       }
     };
     fetchData();
