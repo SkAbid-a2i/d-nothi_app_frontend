@@ -1,65 +1,69 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
-const AuthContext = createContext();
+function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    console.log('Checking token on load:', token ? 'Token found' : 'No token');
-    if (token) {
-      axios.get(`${process.env.REACT_APP_API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-        .then(response => {
-          console.log('Fetched user:', response.data.user);
-          setUser(response.data.user);
-          setLoading(false);
-        })
-        .catch(error => {
-          console.error('Error fetching user:', error.response?.data || error.message);
-          localStorage.removeItem('token');
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  const login = async (email, password) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    console.log('Attempting login with:', { email, password });
     try {
-      console.log('Sending login request to:', `${process.env.REACT_APP_API_URL}/auth/login`);
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/auth/login`, { email, password });
-      console.log('Login response:', response.data);
-      localStorage.setItem('token', response.data.token);
-      const userResponse = await axios.get(`${process.env.REACT_APP_API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${response.data.token}` }
-      });
-      console.log('User response:', userResponse.data);
-      setUser(userResponse.data.user);
-      return true;
+      const success = await login(email, password);
+      console.log('Login result:', success);
+      if (success) {
+        console.log('Navigating to /dashboard');
+        navigate('/dashboard');
+      } else {
+        setError('Login failed. Please check your credentials.');
+      }
     } catch (error) {
-      console.error('Login failed:', error.response?.data || error.message);
-      return false;
+      console.error('Login error:', error.response?.data || error.message);
+      setError(error.response?.data?.message || 'An error occurred during login.');
     }
-  };
-
-  const logout = () => {
-    console.log('Logging out');
-    localStorage.removeItem('token');
-    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {children}
-    </AuthContext.Provider>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              required
+            />
+          </div>
+          <button
+            onClick={handleSubmit}
+            className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            Login
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
-export function useAuthContext() {
-  return useContext(AuthContext);
-}
+export default Login;
