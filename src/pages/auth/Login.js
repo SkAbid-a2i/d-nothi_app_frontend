@@ -12,11 +12,19 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const success = await login(email, password);
-    if (success) {
-      navigate('/dashboard');
-    } else {
-      setError('Invalid credentials');
+    console.log('Attempting login with:', { email, password });
+    try {
+      const success = await login(email, password);
+      console.log('Login result:', success);
+      if (success) {
+        console.log('Navigating to /dashboard');
+        navigate('/dashboard');
+      } else {
+        setError('Login failed. Please check your credentials.');
+      }
+    } catch (error) {
+      console.error('Login error:', error.response?.data || error.message);
+      setError(error.response?.data?.message || 'An error occurred during login.');
     }
   };
 

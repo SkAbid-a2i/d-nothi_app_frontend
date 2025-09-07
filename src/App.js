@@ -1,29 +1,62 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/layout/Layout';
-import Login from './pages/auth/Login';
-import Dashboard from './pages/dashboard/Dashboard';
-import CreateTask from './pages/tasks/CreateTask';
-import CreateLeave from './pages/leaves/CreateLeave';
-import TaskList from './pages/tasks/TaskList';
-import LeaveList from './pages/leaves/LeaveList';
-import { useAuth } from './hooks/useAuth';
+import axios from 'axios';
 
-function App() {
-  const { user } = useAuth();
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL,
+});
 
-  return (
-    <Routes>
-      <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
-      <Route element={<Layout />}>
-        <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
-        <Route path="/tasks/create" element={user && ['SystemAdmin', 'Admin', 'Supervisor'].includes(user.role) ? <CreateTask /> : <Navigate to="/dashboard" />} />
-        <Route path="/leaves/create" element={user && ['Agent'].includes(user.role) ? <CreateLeave /> : <Navigate to="/dashboard" />} />
-        <Route path="/tasks" element={user ? <TaskList /> : <Navigate to="/login" />} />
-        <Route path="/leaves" element={user ? <LeaveList /> : <Navigate to="/login" />} />
-        <Route path="/" element={<Navigate to="/dashboard" />} />
-      </Route>
-    </Routes>
-  );
-}
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  console.log('API request:', config.url, 'Token:', token || 'None');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, error => {
+  console.error('Request interceptor error:', error);
+  return Promise.reject(error);
+});
 
-export default App;
+api.interceptors.response.use(response => {
+  console.log('API response:', response.data);
+  return response;
+}, error => {
+  console.error('API error:', error.response?.data || error.message);
+  return Promise.reject(error);
+});
+
+export const getTasks = async () => {
+  const response = await api.get('/tasks');
+  return response.data;
+};
+
+export const createTask = async (taskData) => {
+  const response = await api.post('/tasks', taskData);
+  return response.data;
+};
+
+export const deleteTask = async (taskId) => {
+  const response = await api.delete(`/tasks/${taskId}`);
+  return response.data;
+};
+
+export const getLeaves = async () => {
+  const response = await api.get('/leaves');
+  return response.data;
+};
+
+export const createLeave = async (leaveData) => {
+  const response = await api.post('/leaves', leaveData);
+  return response.data;
+};
+
+export const updateLeaveStatus = async (leaveId, status) => {
+  const response = await api.put(`/leaves/${leaveId}/status`, { status });
+  return response.data;
+};
+
+export const createUser = async (userData) => {
+  const response = await api.post('/users', userData);
+  return response.data;
+};
+
+export default api;
