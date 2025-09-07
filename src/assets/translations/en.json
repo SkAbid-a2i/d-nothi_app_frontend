@@ -1,0 +1,9 @@
+{
+  "app_name": "D-Nothi",
+  "login": "Login",
+  "dashboard": "Dashboard",
+  "tasks": "Tasks",
+  "leaves": "Leaves",
+  "create_task": "Create Task",
+  "request_leave": "Request Leave"
+}
